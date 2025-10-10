@@ -1,6 +1,6 @@
 # Efficient Memory Management for Large Language  Model Serving with PagedAttention
 
-## Abstract
+## 1 Abstract
 The key-value cache memory for each is huge and grows and shrinks dynamically.
 When managed inefficiently,this memory can be significantly wasted by fragementation and redundant duplication,limiting the batch size.
 To address this problem,we propose PageAttention ,and attention algorithm inspired by the classical virtual memory and paging techniques in operating systems.
@@ -40,4 +40,45 @@ search, that generate multiple outputs per request.
 导致显存浪费；
 而像 PagedAttention 这样的系统可以在页粒度上共享 KV Cache，
 显著提升显存效率与吞吐率
-##
+## 2 Background
+
+### 2.1 Transformer-Based Large Language Models
+### 2.2 LLM Service & Autoregressive Generation
+
+**The prompt phase**
+the computation of the prompt phase can be parallelized using matrixmatrix multiplication operations.
+**The autoregressive generation phase**
+The computation at different iterations cannot be parallelized due to the data dependency and often uses matrix-vector multiplication,which is less efficient.
+### 2.3 Batching Techniques for LLMs
+
+A straightforward batching technique would pad the inputs and outputs of the requests to equalize their lengths, wasting GPU computation and memory.
+solution to this problem:iteration-level scheduling.
+After each iteration, completed requests are removed from the batch, and new ones are added. 
+Therefore, a new request can be processed after waiting for a single iteration, not waiting for the entire batch to complete.
+
+## 3 Memory Challenges in LLM Serving
+### Large KV cache
+### compelx decoding algorithms
+
+The extent of KV cache sharing depends on the specific decoding algorithm employed.
+### Scheduling for unknow input & output lengths
+
+### 3.1 Memory Management in Existing Systems
+
+## 4 Method
+
+Each block table entry
+records the corresponding physical blocks of a logical block
+and the number of filled positions
+
+shared memory:vLLM implements a copy-onwrite mechanism at the block granularity for the physical
+blocks that need modification by multiple sequences, similar
+to the copy-on-write technique in OS virtual memory 
+**Parallel sampling**
+In summary, vLLM enables the sharing of most of the
+space used to store the prompts’ KV cache across multiple
+output samples, with the exception of the final logical block,
+which is managed by a copy-on-write mechanism. By sharing
+physical blocks across multiple samples, memory usage can
+be greatly reduced, especially for long input prompts.
+**Beam search**:
